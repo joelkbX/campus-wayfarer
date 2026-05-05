@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Campus Wayfarer – Interactive navigation system for Acharya Institute campus. Find the shortest path between buildings, gates, and facilities." />
+    <title>Campus Wayfarer | Acharya Institute</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- App Styles -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <!-- ── Header ─────────────────────────────────────────── -->
+    <header class="app-header" role="banner">
+      <div class="header-inner">
+        <div class="header-brand">
+          <svg class="brand-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor"/>
+            <circle cx="12" cy="9" r="2.5" fill="white" opacity="0.9"/>
+          </svg>
+          <div>
+            <h1 class="brand-title">Campus Wayfarer</h1>
+            <span class="brand-subtitle">Acharya Institute of Technology</span>
+          </div>
+        </div>
+        <div class="header-status" id="server-status" aria-live="polite">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-label">Connecting…</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Main Layout ────────────────────────────────────── -->
+    <main class="app-main" role="main">
+
+      <!-- Left Panel: Controls -->
+
+      <aside class="control-panel" aria-label="Navigation Controls">
+
+        <!-- Route Planner Card -->
+        <section class="card route-card" aria-labelledby="route-heading">
+          <h2 class="card-title" id="route-heading">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2L8 8H5L3 12l2 1 1 3h12l1-3 2-1-2-4h-3L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            Plan Your Route
+          </h2>
+
+          <div class="form-group">
+            <label class="form-label" for="start">
+              <span class="label-dot label-dot--from"></span>
+              Starting Point
+            </label>
+            <div class="select-wrapper">
+              <select id="start" class="form-select" aria-label="Choose starting location">
+                <option value="" disabled selected>Select a location…</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="swap-btn" id="swap-btn" aria-label="Swap start and end locations" title="Swap">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <div class="form-group">
+            <label class="form-label" for="end">
+              <span class="label-dot label-dot--to"></span>
+              Destination
+            </label>
+            <div class="select-wrapper">
+              <select id="end" class="form-select" aria-label="Choose destination">
+                <option value="" disabled selected>Select a location…</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="find-btn" id="find-btn" onclick="findRoute()">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+              <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Find Route
+          </button>
+        </section>
+
+        <!-- Result Card -->
+        <section class="card result-card hidden" id="result-card" aria-live="polite" aria-labelledby="result-heading">
+          <h2 class="card-title" id="result-heading">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Route Found
+          </h2>
+          <div class="result-stats">
+            <div class="stat-chip">
+              <span class="stat-label">Distance</span>
+              <span class="stat-value" id="result-distance">—</span>
+            </div>
+            <div class="stat-chip">
+              <span class="stat-label">Walk Time</span>
+              <span class="stat-value" id="result-time">—</span>
+            </div>
+            <div class="stat-chip">
+              <span class="stat-label">Stops</span>
+              <span class="stat-value" id="result-stops">—</span>
+            </div>
+          </div>
+          <ol class="path-list" id="path-list" aria-label="Route steps"></ol>
+        </section>
+
+        <!-- Error Card -->
+        <div class="card error-card hidden" id="error-card" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <p id="error-message">Something went wrong.</p>
+        </div>
+
+        <!-- Legend -->
+        <section class="card legend-card" aria-labelledby="legend-heading">
+          <h2 class="card-title" id="legend-heading">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 20H5a2 2 0 01-2-2V6a2 2 0 012-2h4m6 16h4a2 2 0 002-2V6a2 2 0 00-2-2h-4m-6 16V4m0 16h6M9 4h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Map Legend
+          </h2>
+          <ul class="legend-list" role="list">
+            <li class="legend-item">
+              <span class="legend-swatch" style="background:#6366f1"></span>
+              <span>Building / Landmark</span>
+            </li>
+            <li class="legend-item">
+              <span class="legend-swatch" style="background:#10b981"></span>
+              <span>Entry / Exit Point</span>
+            </li>
+            <li class="legend-item">
+              <span class="legend-swatch" style="background:#f59e0b"></span>
+              <span>Parking</span>
+            </li>
+            <li class="legend-item">
+              <span class="legend-swatch legend-swatch--line" style="background:#ef4444"></span>
+              <span>Shortest Route</span>
+            </li>
+          </ul>
+        </section>
+
+      </aside>
+
+      <!-- Map Area -->
+      <div class="map-wrapper">
+        <div id="map" role="application" aria-label="Campus Map"></div>
+
+        <!-- Loading Overlay -->
+        <div class="map-overlay" id="map-loader" aria-live="polite">
+          <div class="spinner" aria-hidden="true"></div>
+          <p>Loading campus map…</p>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
