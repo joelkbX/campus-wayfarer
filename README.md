@@ -31,7 +31,7 @@ Ensure you have [Node.js](https://nodejs.org/) installed on your machine.
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/campus-wayfarer.git
+   git clone https://github.com/joelkbX/campus-wayfarer.git
    cd campus-wayfarer
    ```
 
