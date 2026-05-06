@@ -2,8 +2,17 @@
  * Campus Wayfarer – Graph & Dijkstra
  */
 
+const fs = require("fs");
+const path = require("path");
+
 const geojsonData = (() => {
-  try { return require("../frontend/campus.geojson"); } catch { return { features: [] }; }
+  try {
+    const data = fs.readFileSync(path.join(__dirname, "../frontend/campus.geojson"), "utf8");
+    return JSON.parse(data);
+  } catch (e) {
+    console.error("Error loading geojson:", e);
+    return { features: [] };
+  }
 })();
 
 const coordsOf = {};

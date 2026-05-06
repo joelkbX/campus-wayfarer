@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const { graph, shortestPath } = require("./graph");
+const { graph, shortestPath, coordsOf } = require("./graph");
 
 const app = express();
 const PORT = 5000;
@@ -11,7 +11,7 @@ app.use(express.static(frontendDir));
 app.use(cors());
 app.use(express.json());
 
-app.get("/locations", (_, res) => res.json(Object.keys(graph).sort()));
+app.get("/locations", (_, res) => res.json(Object.keys(coordsOf).sort()));
 
 app.post("/route", (req, res) => {
   const { start, end } = req.body ?? {};
@@ -20,7 +20,7 @@ app.post("/route", (req, res) => {
   return result.error ? res.status(404).json(result) : res.json(result);
 });
 
-app.get("*", (_, res) => res.sendFile(path.join(frontendDir, "index.html")));
+app.get("/*splat", (_, res) => res.sendFile(path.join(frontendDir, "index.html")));
 
 app.use((err, _req, res, _next) => {
   console.error(err);

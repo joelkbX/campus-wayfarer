@@ -40,7 +40,7 @@ const iconFrom = makeIcon("#10b981");
 const iconTo = makeIcon("#ef4444");
 
 const typeColors = {
-  "entry/exit_point": "#10b981", "entry/exit_pont": "#10b981",
+  "entry/exit_point": "#10b981",
   parking: "#f59e0b", landmark: "#6366f1"
 };
 
